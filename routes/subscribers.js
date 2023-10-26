@@ -1,11 +1,11 @@
 const express = require('express')
 const router = express.Router()
 
-const subscriberDb = require('../models/subscriber.js')
+const Subscriber = require('../models/subscriber.js')
 
 router.get('/', async (req, res) => {
 	try {
-		const subscribers = await subscriberDb.find()
+		const subscribers = await Subscriber.find()
 		res.json(subscribers)
 	} catch(err) {
 		res.status(500).json({ message: err.message})
@@ -18,10 +18,10 @@ router.get('/:id', getSubscriber, (req, res) => {
 
 router.post('/', async (req, res) => {
 	try {
-		await subscriberDb.create(req.body)
+		await Subscriber.create(req.body)
 		res.status(201).json({ message: 'subscriber saved' })
 	} catch(err) {
-		res.status(500).json({ message: err.message })
+		res.status(400).json({ message: err.message })
 	}
 })
 
@@ -35,7 +35,7 @@ router.patch('/:id', getSubscriber, async (req, res) => {
 	try {
 		res.json(await newSubscriber.save())
 	} catch(err) {
-		res.status(500).json({ message: err.message })
+		res.status(400).json({ message: err.message })
 	}
 })
 
@@ -49,12 +49,15 @@ router.delete('/:id', getSubscriber, async (req, res) => {
 })
 
 async function getSubscriber(req, res, next) {
+	let subscriber
 	try {
-		const subscriber = await subscriberDb.findById(req.params.id)
-		res.subscriber = subscriber
+		subscriber = await Subscriber.findById(req.params.id)
+		if (subscriber === null)
+			return res.status(404).json({ message: 'Cannot find subscriber' })
 	} catch(err) {
-		return res.status(404).json({ message: err.message })
+		return res.status(500).json({ message: err.message })
 	}
+	res.subscriber = subscriber
 	next()
 }
 
